@@ -36,7 +36,7 @@ hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
 <script>
 'use strict';
 const mem={};const st={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
-const DAY=864e5,BRAND='Allakan Apps',MAIL='allakanapps@gmail.com',VER='1.1';
+const DAY=864e5,BRAND='Allakan Apps',MAIL='allakanapps@gmail.com',VER='1.2';
 const WA='963991139886',PUB='MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7b8NeXFnuJnT1w9ZavQk+ypAZ26DBHstP1Lc39Jxte+/I37yyvJ8uLdvM2Zsrweu44pRvloPoe74GSO/Yv1aHg==',PACK='b1',FREE_HIVES=5,FREE_APS=2;
 let S;try{S=JSON.parse(st.get('bees')||'{}')}catch(e){S={}}
 S=Object.assign({apiaries:[],hives:[],logs:[],tasks:[],drugs:[],nid:1,did:null,pro:false},S);
@@ -158,7 +158,7 @@ const FEED=[
 {n:'🥣 سكر جاف (إسعاف)',b:'للطوارئ فقط: سكر حبيبي فوق الغطاء الداخلي أو على ورق جرائد فوق الإطارات.',t:'طوارئ'},
 {n:'🥜 عجينة البروتين (بدائل حبوب اللقاح)',b:'تُوضع أواخر الشتاء والربيع لتحفيز تربية الحضنة وقت قلة حبوب اللقاح. اتبع تعليمات المصنّع للمنتج الذي تشتريه.',t:'أواخر الشتاء والربيع'},
 {n:'📌 تنبيهات التغذية',b:'• لا تُقدّم تغذية داخل الخلية أثناء علاج Formic Pro.\n• الكميات لكل خلية تتبع قوة الخلية والموسم؛ سجّل ما تعطيه بسجل «تغذية» لتتابع.\n• يتوقف النحل عن أخذ الغذاء الإضافي عند تفتح الرحيق.',t:''}];
-const allDrugs=()=>DRUGS.concat((S.drugs||[]).map(d=>Object.assign({custom:true},d)));
+const allDrugs=()=>(S.pro?DRUGS:[]).concat((S.drugs||[]).map(d=>Object.assign({custom:true},d)));
 // ---- views
 const taskCard=t=>`<div class="r ${t.d<today()&&!t.done?'late':''}"><div data-act="tedit" data-id="${t.id}" style="flex:1;cursor:pointer"><b>${K[t.k][0]} ${K[t.k][1]}</b><small>${esc(tlabel(t))} · ${fmt(t.d)} ${esc(t.tm||'')} · ${rel(t.d)}${t.rep?' · 🔁 كل '+t.rep+' يوم':''}</small>${t.note?`<small>${esc(t.note)}</small>`:''}</div>${t.done?'<span class="ok">✔</span>':`<button class="btn s" data-act="tdone" data-id="${t.id}">✔ تم</button>`}</div>`;
 function hiveCard(h){const li=lastLog(h.id,'inspect'),nt=S.tasks.filter(t=>!t.done&&t.h===h.id).sort(cmpT)[0];
@@ -238,7 +238,8 @@ const opts=[['all','كل الخلايا']].concat(S.apiaries.map(a=>['a:'+a.id,'
 M(hdr(t?'تعديل موعد':'موعد جديد')+(t?'':`<div><span class="chip" data-act="preset" data-p="insp">🔍 كشف دوري كل 14 يوم</span><span class="chip" data-act="preset" data-p="varroa">💊 مكافحة فاروا</span><span class="chip" data-act="preset" data-p="feed">🍯 تغذية</span></div>`)+sfld('tk','النوع',['inspect','treat','mite','feed','harvest','queen','note','other'].map(k=>[k,K[k][0]+' '+K[k][1]]),p.k)+sfld('ttg','الخلايا',opts,tg)+fld('td','التاريخ','date',p.d)+fld('ttm','الوقت','time',p.tm||S.set.tm)+sfld('trep','التكرار'+(S.pro?'':' 🔒 (النسخة الكاملة)'),[[0,'بدون تكرار'],[7,'كل أسبوع'],[10,'كل 10 أيام'],[14,'كل أسبوعين'],[21,'كل 3 أسابيع'],[30,'كل شهر'],[60,'كل شهرين'],[90,'كل 3 شهور']],p.rep)+fld('tn','ملاحظة','text',p.note)+`<button class="btn w" data-act="tsave" data-id="${id||''}">حفظ</button>`+(t?`<button class="btn s w no" data-act="tdel" data-id="${id}">حذف الموعد</button>`:''))}
 function openDone(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;M(hdr('✔ إنجاز: '+K[t.k][0]+' '+K[t.k][1])+`<p class="mut">${esc(tlabel(t))} — ${targets(t).length} خلية</p>`+fld('dd','تاريخ الإنجاز','date',today())+fld('dn','ملاحظة (اختياري)','text','')+`<label><input type="checkbox" id="dl" checked> سجّل بسجل كل خلية</label>`+(t.rep?`<p class="mut">رح يتجدد الموعد تلقائياً (كل ${t.rep} يوم).</p>`:'')+`<button class="btn w" data-act="dsave" data-id="${id}">تأكيد</button>`)}
 
-function refView(){const sec=(n,b)=>`<details class="card"><summary><b>${n}</b></summary>${b}</details>`,P=(t,b)=>b?`<p><b>${t}</b> ${esc(b).replace(/\n/g,'<br>')}</p>`:'';
+function refView(){if(!S.pro){const L=(t,a)=>`<h2>${t}</h2>`+a.map(n=>`<div class="r" data-act="gopro" style="cursor:pointer"><b>🔒 ${esc(n)}</b></div>`).join('');return `<h1>📚 المرجع</h1><div class="banner">🔒 المرجع (الأدوية وجرعاتها وطرق الإعطاء، الأمراض وعلاجها، وصفات التغذية والكاندي) بالنسخة الكاملة.</div>`+proBlock()+L('🪲 أدوية الفاروا',DRUGS.map(d=>d.n))+L('🩺 الأمراض والآفات',DIS.map(d=>d.n))+L('🍯 التغذية السكرية والكاندي',FEED.map(d=>d.n))}
+const sec=(n,b)=>`<details class="card"><summary><b>${n}</b></summary>${b}</details>`,P=(t,b)=>b?`<p><b>${t}</b> ${esc(b).replace(/\n/g,'<br>')}</p>`:'';
 let h=`<h1>📚 المرجع</h1><div class="banner">⚠️ معلومات إرشادية من ملصقات المنتجات ونشرات إرشادية (جامعات ودوائر زراعية). الجرعات تختلف حسب المنتج والبلد والتركيز: اتبع ملصق المنتج الذي اشتريته واستشر الطبيب البيطري أو الإرشاد الزراعي. لا تعالج أثناء موسم القطاف.</div>`;
 h+=`<h2>💊 أدويتي</h2><button class="btn w" data-act="drgnew">➕ أضف دواء</button>`+((S.drugs||[]).map(d=>`<div class="r" data-act="drgedit" data-id="${d.id}" style="cursor:pointer"><div><b>${esc(d.n)}</b><small>${esc(d.g||'')}${d.dose?' · '+esc(d.dose):''}</small><small>${+d.days?'مدة العلاج: '+d.days+' يوم':'بدون مدة'}</small></div><span class="mut">✎</span></div>`).join('')||'<p class="mut">ما أضفت أدوية. أضف أدويتك مع الجرعة ومدة العلاج وبتظهر بقائمة سجل المكافحة.</p>');
 h+=`<h2>🪲 أدوية الفاروا</h2>`+DRUGS.map(d=>sec(d.n,P('الجرعة:',d.dose)+P('الطريقة:',d.how)+P('المدة:',d.dur)+P('ملاحظات:',d.note))).join('');
